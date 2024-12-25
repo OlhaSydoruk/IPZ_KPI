@@ -13,10 +13,11 @@ import java.nio.file.Paths;
 
 @Service
 public class FileStorageService {
-    private final String storagePath = "/files"; // Volume у Docker
+
+    private final String storagePath = "/files"; // Volume in Docker
 
     public String saveFile(MultipartFile file, Long id) throws IOException {
-        String fileName = "author_" + id + "_" + file.getOriginalFilename();
+        String fileName = "author_" + id + "_" + System.currentTimeMillis() + "_" + file.getOriginalFilename();
         Path filePath = Paths.get(storagePath, fileName);
         Files.createDirectories(filePath.getParent());
 

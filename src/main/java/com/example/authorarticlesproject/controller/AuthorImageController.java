@@ -13,6 +13,8 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @RestController
 @RequestMapping("/api/authors")
@@ -23,60 +25,83 @@ public class AuthorImageController {
     @Autowired
     private FileStorageService fileStorageService;
 
-    // Завантаження зображення у файлову систему
-    @PostMapping("/{id}/upload-photo-file")
-    public ResponseEntity<String> uploadPhotoToFile(@PathVariable Long id, @RequestParam("file") MultipartFile file) throws IOException {
-        if (!isSupportedFormat(file.getContentType())) {
-            return ResponseEntity.badRequest().body("Unsupported file format. Only JPEG, PNG, and GIF are allowed.");
-        }
-
-        String filePath = fileStorageService.saveFile(file, id);
-        return ResponseEntity.ok("Photo saved at: " + filePath);
-    }
-
-    // Завантаження зображення у базу даних
-    @PostMapping("/{id}/upload-photo")
-    public ResponseEntity<String> uploadPhotoToDatabase(@PathVariable Long id, @RequestParam("file") MultipartFile file) throws IOException {
-        if (!isSupportedFormat(file.getContentType())) {
-            return ResponseEntity.badRequest().body("Unsupported file format. Only JPEG, PNG, and GIF are allowed.");
-        }
-
-        BufferedImage originalImage = ImageIO.read(file.getInputStream());
-        BufferedImage resizedImage = fileStorageService.resizeImage(originalImage, 800, 600);
-
+    // Upload multiple images to the file system
+    @PostMapping("/{id}/upload-multiple-photos-file-system")
+    public ResponseEntity<String> uploadMultiplePhotosToFile(
+            @PathVariable Long id,
+            @RequestParam("files") MultipartFile[] files) throws IOException {
 
         Author author = authorRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Author not found"));
 
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        ImageIO.write(resizedImage, "jpg", baos);
-        baos.flush();
-        byte[] optimizedImage = baos.toByteArray();
-        baos.close();
+        for (MultipartFile file : files) {
+            if (!isSupportedFormat(file.getContentType())) {
+                return ResponseEntity.badRequest().body("Unsupported file format. Only JPEG, PNG, and GIF are allowed.");
+            }
 
-        author.setPhoto(optimizedImage);
+            String filePath = fileStorageService.saveFile(file, id);
+            author.getPhotoPaths().add(filePath);
+        }
         authorRepository.save(author);
 
+        String photoPaths = IntStream.range(0, author.getPhotoPaths().size())
+                .mapToObj(i -> i + " " + author.getPhotoPaths().get(i))
+                .collect(Collectors.joining("\n"));
 
-        return ResponseEntity.ok("Photo uploaded successfully to database.");
+
+        return ResponseEntity.ok("Photos uploaded successfully to the file system. \n " + photoPaths);
     }
 
-    // Перегляд зображення з бази даних
-    @GetMapping("/{id}/photo")
-    public ResponseEntity<byte[]> getPhotoFromDatabase(@PathVariable Long id) {
+
+
+    @PostMapping("/{id}/upload-multiple-photos-db")
+    public ResponseEntity<String> uploadMultiplePhotosToDatabase(
+            @PathVariable Long id,
+            @RequestParam("files") MultipartFile[] files) throws IOException {
+
+        Author author = authorRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Author not found"));
+
+        for (MultipartFile file : files) {
+            if (!isSupportedFormat(file.getContentType())) {
+                return ResponseEntity.badRequest().body("Unsupported file format. Only JPEG, PNG, and GIF are allowed.");
+            }
+
+            BufferedImage originalImage = ImageIO.read(file.getInputStream());
+            BufferedImage resizedImage = fileStorageService.resizeImage(originalImage, 800, 600);
+
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ImageIO.write(resizedImage, "jpg", baos);
+            baos.flush();
+            byte[] optimizedImage = baos.toByteArray();
+            baos.close();
+
+            author.getPhotos().add(optimizedImage);
+        }
+        authorRepository.save(author);
+
+        return ResponseEntity.ok("Photos uploaded successfully to the database.");
+    }
+
+    // Retrieve a specific photo from the database by index
+    @GetMapping("/{id}/photo/{index}")
+    public ResponseEntity<byte[]> getPhotoFromDatabase(
+            @PathVariable Long id, @PathVariable int index) {
+
         Author author = authorRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Client not found"));
 
-        byte[] photo = author.getPhoto();
-        if (photo == null) {
-            return ResponseEntity.notFound().build();
+        if (index < 0 || index >= author.getPhotos().size()) {
+            return ResponseEntity.badRequest().body(null);
         }
 
+        byte[] photo = author.getPhotos().get(index);
         return ResponseEntity.ok()
                 .contentType(MediaType.IMAGE_JPEG)
                 .body(photo);
     }
 
+    // Retrieve a photo from the file system by providing its path
     @GetMapping("/{id}/photo-file")
     public ResponseEntity<byte[]> getPhotoFromFile(@PathVariable Long id, @RequestParam("path") String filePath) {
         try {
@@ -89,23 +114,28 @@ public class AuthorImageController {
         }
     }
 
-    // Видалення зображення з бази даних
-    @DeleteMapping("/{id}/photo")
-    public ResponseEntity<String> deletePhotoFromDatabase(@PathVariable Long id) {
+    // Delete a specific photo from the database by index
+    @DeleteMapping("/{id}/photo/{index}")
+    public ResponseEntity<String> deletePhotoFromDatabase(
+            @PathVariable Long id, @PathVariable int index) {
+
         Author author = authorRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Client not found"));
 
-        author.setPhoto(null);
+        if (index < 0 || index >= author.getPhotos().size()) {
+            return ResponseEntity.badRequest().body("Invalid photo index.");
+        }
+
+        author.getPhotos().remove(index);
         authorRepository.save(author);
 
         return ResponseEntity.ok("Photo deleted successfully from database.");
     }
 
-    // Видалення зображення з файлової системи
+    // Delete a specific photo from the file system
     @DeleteMapping("/{id}/photo-file")
     public ResponseEntity<String> deletePhotoFromFile(@PathVariable Long id, @RequestParam("path") String filePath) {
         try {
-            // Видалення файлу за вказаним шляхом
             fileStorageService.deleteFile(filePath);
             return ResponseEntity.ok("Photo deleted successfully from file system.");
         } catch (IOException e) {
