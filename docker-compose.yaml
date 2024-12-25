@@ -17,22 +17,28 @@ services:
     volumes:
           - db-data:/var/lib/mysql
 
+
   backend:
     build: .
     container_name: author-articles-backend
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/author-articles-db
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=root
+      - SPRING_REDIS_HOST=redis
+      - SPRING_REDIS_PORT=6379
     volumes:
       - files-data:/files
     ports:
       - "8085:8085"
     networks:
       - localnet
+
 
   frontend:
     image: nginx:alpine
@@ -46,6 +52,21 @@ services:
       - backend
     networks:
       - localnet
+
+
+  redis:
+    image: redis:alpine
+    container_name: author-articles-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - localnet
+
 
 volumes:
   db-data:
