@@ -9,6 +9,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 @RestController
@@ -38,11 +41,22 @@ public class AuthorImageController {
             return ResponseEntity.badRequest().body("Unsupported file format. Only JPEG, PNG, and GIF are allowed.");
         }
 
-        Author author = authorRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Client not found"));
+        BufferedImage originalImage = ImageIO.read(file.getInputStream());
+        BufferedImage resizedImage = fileStorageService.resizeImage(originalImage, 800, 600);
 
-        author.setPhoto(file.getBytes());
+
+        Author author = authorRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Author not found"));
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ImageIO.write(resizedImage, "jpg", baos);
+        baos.flush();
+        byte[] optimizedImage = baos.toByteArray();
+        baos.close();
+
+        author.setPhoto(optimizedImage);
         authorRepository.save(author);
+
 
         return ResponseEntity.ok("Photo uploaded successfully to database.");
     }
