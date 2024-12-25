@@ -8,11 +8,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
-public class RedisMessageSubscriber implements MessageListener {
-    public static List<String> messageList = new ArrayList<>();
+public class NewsArticlesListener implements MessageListener {
+    public static List<String> messageNewsList = new ArrayList<>();
     @Override
     public void onMessage(Message message, byte[] pattern) {
-        messageList.add(message.toString());
+        messageNewsList.add(message.toString());
         System.out.println("Message received : " +message);
 
     }

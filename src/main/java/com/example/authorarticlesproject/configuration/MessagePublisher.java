@@ -1,5 +1,5 @@
 package com.example.authorarticlesproject.configuration;
 
 public interface MessagePublisher {
-    void publish(String message);
+    void publish(String message, String topicName);
 }
