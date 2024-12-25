@@ -63,6 +63,18 @@ public class AuthorImageController {
                 .body(photo);
     }
 
+    @GetMapping("/{id}/photo-file")
+    public ResponseEntity<byte[]> getPhotoFromFile(@PathVariable Long id, @RequestParam("path") String filePath) {
+        try {
+            byte[] image = fileStorageService.loadFile(filePath);
+            return ResponseEntity.ok()
+                    .contentType(MediaType.IMAGE_JPEG)
+                    .body(image);
+        } catch (IOException e) {
+            return ResponseEntity.status(404).body(null);
+        }
+    }
+
     // Видалення зображення з бази даних
     @DeleteMapping("/{id}/photo")
     public ResponseEntity<String> deletePhotoFromDatabase(@PathVariable Long id) {
