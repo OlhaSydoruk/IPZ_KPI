@@ -2,7 +2,6 @@ package com.example.authorarticlesproject.service;
 
 import com.example.authorarticlesproject.model.Article;
 import com.example.authorarticlesproject.repository.ArticleRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
