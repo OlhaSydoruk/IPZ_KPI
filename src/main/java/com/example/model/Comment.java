@@ -5,16 +5,16 @@ import jakarta.persistence.*;
 @Entity
 public class Comment {
 
-    public Comment(Long id, int likes, int dislikes, String text, Article article) {
+    public Comment(Long id, int likes, int dislikes, String text, Article article, String commentAuthor) {
         this.id = id;
         this.likes = likes;
         this.dislikes = dislikes;
         this.text = text;
         this.article = article;
+        this.commentAuthor = commentAuthor;
     }
 
-    public Comment() {
-    }
+    public Comment() {}
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,6 +26,7 @@ public class Comment {
     @ManyToOne
     @JoinColumn(name = "article_id")
     private Article article;
+    private String commentAuthor;
 
     public Long getId() {
         return id;
@@ -65,5 +66,13 @@ public class Comment {
 
     public void setArticle(Article article) {
         this.article = article;
+    }
+
+    public String getCommentAuthor() {
+        return commentAuthor;
+    }
+
+    public void setCommentAuthor(String commentAuthor) {
+        this.commentAuthor = commentAuthor;
     }
 }

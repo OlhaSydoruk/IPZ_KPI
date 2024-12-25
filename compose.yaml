@@ -1,43 +1,32 @@
-version: '3.8'
-
+version: "3.7"
 services:
-  db:
-    image: postgres:14.1-alpine
-    container_name: author-articles-db
-    restart: always
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: author-articles-db
-    volumes:
-      - db-data:/var/lib/postgresql/data
-    ports:
-      - "5433:5432"
-
-  backend:
+  api_service:
     build: .
-    container_name: author-articles-backend
-    depends_on:
-      - db
+    restart: always
+    ports:
+      - 8081:8080
+    networks:
+      - springapimysql-net
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/author-articles-db
-      - SPRING_DATASOURCE_USERNAME=postgres
-      - SPRING_DATASOURCE_PASSWORD=postgres
-    volumes:
-      - files-data:/files
-    ports:
-      - "8081:8080"
-
-  frontend:
-    image: nginx:alpine
-    container_name: author-articles-frontend
-    volumes:
-      - ./frontend:/usr/share/nginx/html
-    ports:
-      - "80:80"
+      - spring.datasource.url=jdbc:mysql://mysqldb:3306/author-articles-db?autoReconnect=true
     depends_on:
-      - backend
+      - mysqldb
 
-volumes:
-  db-data:
-  files-data:
+    volumes:
+      - .m2:/root/.m2
+
+  mysqldb:
+    image: "mysql:8.0"
+    restart: always
+    ports:
+      - 3307:3306
+    networks:
+      - springapimysql-net
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: author-articles-db
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
+networks:
+  springapimysql-net:
+

@@ -95,6 +95,10 @@ public class Author {
     public void setPhoto(byte[] photo) {
         this.photo = photo;
     }
+
+    public void addNotification(String notification){
+        notifications.add(notification);
+    }
 }
 
 
