@@ -44,5 +44,4 @@ public class FileStorageService {
         g2d.dispose();
         return outputImage;
     }
-
 }

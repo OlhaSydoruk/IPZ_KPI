@@ -10,9 +10,6 @@ import java.util.List;
 @Table(name = "authors")
 
 public class Author {
-
-
-
     public Author() {
     }
 

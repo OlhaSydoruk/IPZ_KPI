@@ -2,7 +2,6 @@ package com.example.authorarticlesproject.controller;
 
 import com.example.authorarticlesproject.model.Reader;
 import com.example.authorarticlesproject.service.ReaderService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 

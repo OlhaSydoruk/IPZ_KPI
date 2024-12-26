@@ -8,16 +8,6 @@ import java.util.List;
 @Table(name = "readers")
 public class Reader {
 
-    public Reader(Long id, String name, String surname, List<String> notifications) {
-        this.id = id;
-        this.name = name;
-        this.surname = surname;
-        this.notifications = notifications;
-    }
-
-    public Reader() {
-    }
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -27,6 +17,17 @@ public class Reader {
     @CollectionTable(name = "reader_notifications", joinColumns = @JoinColumn(name = "reader_id"))
     @Column(name = "notification")
     private List<String> notifications;
+
+
+    public Reader(Long id, String name, String surname, List<String> notifications) {
+        this.id = id;
+        this.name = name;
+        this.surname = surname;
+        this.notifications = notifications;
+    }
+
+    public Reader() {
+    }
 
     public Long getId() {
         return id;

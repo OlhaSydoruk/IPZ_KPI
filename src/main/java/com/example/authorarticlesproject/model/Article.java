@@ -7,6 +7,15 @@ import jakarta.persistence.*;
 @Entity
 public class Article {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private String type;
+    private String title;
+    private Long comment_id;
+    private int rating;
+
     public Article(Long id, String type, String title, Long comment_id, int rating) {
         this.id = id;
         this.type = type;
@@ -17,17 +26,6 @@ public class Article {
 
     public Article() {
     }
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    private String type;
-    private String title;
-    private Long comment_id;
-
-    private int rating;
-
 
     public Long getId() {
         return id;
